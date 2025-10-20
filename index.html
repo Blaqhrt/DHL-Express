@@ -96,8 +96,7 @@ footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
 
   function storageKeyForTN(tn){ return 'tracker_state_' + tn; }
   function saveState(tn, startTs){ localStorage.setItem(storageKeyForTN(tn), JSON.stringify({ startTs })); }
-  function loadState(tn){ try{ return JSON.parse(localStorage.getItem(storageKeyForTN(tn))); } catch(e){ return null; }
-  }
+  function loadState(tn){ try{ return JSON.parse(localStorage.getItem(storageKeyForTN(tn))); } catch(e){ return null; }}
   function clearState(tn){ localStorage.removeItem(storageKeyForTN(tn)); }
 
   function createShipmentCard(tn){
@@ -153,6 +152,7 @@ footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
         statEl.textContent = events[steps.length-1].title + ' — ' + events[steps.length-1].time;
         deliveredEl.style.display='block';
         clearState(tn);
+        removeCodeFromActiveList(tn);
       } else {
         statEl.textContent = events[Math.min(idx,steps.length-1)].title + ' — ' + events[Math.min(idx,steps.length-1)].time;
         requestAnimationFrame(progressUpdate);
@@ -161,13 +161,33 @@ footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
     requestAnimationFrame(progressUpdate);
   }
 
+  // --- Persist active tracking codes ---
+  function getActiveCodes(){ return JSON.parse(localStorage.getItem('active_codes')||'[]'); }
+  function saveActiveCodes(codes){ localStorage.setItem('active_codes', JSON.stringify(codes)); }
+  function removeCodeFromActiveList(code){
+    let codes = getActiveCodes();
+    codes = codes.filter(c=>c!==code);
+    saveActiveCodes(codes);
+  }
+
   startBtn.addEventListener('click', ()=>{
     const input = tnInput.value.trim();
     if(!input){ alert("Please enter at least one tracking code"); return; }
     const codes = input.split(',').map(s=>s.trim()).filter(Boolean);
     tnInput.disabled=true; startBtn.disabled=true;
 
+    const activeCodes = [...new Set([...getActiveCodes(), ...codes])];
+    saveActiveCodes(activeCodes);
+
     codes.forEach(code=>{
+      const card = createShipmentCard(code);
+      animateShipment(card, code);
+    });
+  });
+
+  // --- Restore saved shipments on page load ---
+  document.addEventListener('DOMContentLoaded', ()=>{
+    getActiveCodes().forEach(code=>{
       const card = createShipmentCard(code);
       animateShipment(card, code);
     });
