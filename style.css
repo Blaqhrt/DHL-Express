@@ -1,0 +1,29 @@
+ .faq { 
+  font-size: 14px; 
+  color: #0b1733; 
+  line-height: 1.6; 
+  margin-top:16px; 
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* spacing between Q&A */
+}
+.faq p { 
+  margin: 0; 
+}
+.faq strong { 
+  color: var(--brand-red); 
+  display: block;
+}
+.faq em { 
+  font-style: normal; 
+  color: var(--muted); 
+  display: block;
+  margin-top: 4px;
+}
+.faq-toggle { 
+  cursor:pointer; 
+  color: var(--brand-red); 
+  font-weight:700; 
+  margin-bottom:12px; 
+  display:inline-block; 
+}
