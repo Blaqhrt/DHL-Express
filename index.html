@@ -1,10 +1,9 @@
 <!doctype html>
 <html lang="en">
-  <link rel="stylesheet" href="style.css">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>DHL Express</title>
+<title>DHL Express Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--brand-yellow:#FFCC00;--brand-red:#C40016;--bg:#f6f8fb;--card:#ffffff;--muted:#6b7280;}
@@ -16,7 +15,7 @@ html,body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"He
 .subtitle{color:var(--muted);font-size:13px;margin-top:4px;}
 .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(11,23,51,0.06);margin-top:-6px;}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px;}
-.input-box{flex-grow:1;} input[type=text]{padding:10px 12px;border-radius:8px;border:1px solid #efe7d0;width:100%;}
+.input-box{flex-grow:1;} input[type=text]{padding:10px 12px;border-radius:8px;border:1px solid #efe7d0;width:100%;} 
 button{background:var(--brand-red);color:white;padding:10px 14px;border-radius:8px;border:0;font-weight:700;cursor:pointer;margin-top:8px;}
 .status{margin-top:14px;font-weight:700;}
 .progress{height:12px;background:#fff;border-radius:999px;overflow:hidden;margin-top:14px;border:1px solid #f5e6c0;}
@@ -33,6 +32,10 @@ button{background:var(--brand-red);color:white;padding:10px 14px;border-radius:8
 .meta{color:var(--muted);font-size:13px;margin-top:2px;}
 .delivered{color:green;font-weight:700;margin-top:12px;font-size:16px;}
 footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
+.faq-toggle{cursor:pointer;color:blue;text-decoration:underline;margin-top:12px;display:inline-block;}
+.faq{display:none;flex-direction:column;margin-top:10px;background:#fff;padding:10px;border-radius:5px;}
+.faq-item{margin-bottom:10px;}
+.shipment-card{margin-bottom:24px;}
 </style>
 </head>
 <body>
@@ -40,8 +43,8 @@ footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
   <div class="header">
     <div class="brand-mark">DHL</div>
     <div>
-      <div class="title">DHL Express</div>
-      <div class="subtitle">Enter tracking number</div>
+      <div class="title">DHL Express Tracker</div>
+      <div class="subtitle">Enter tracking number(s) separated by commas</div>
     </div>
   </div>
 
@@ -50,48 +53,35 @@ footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
       <input type="text" id="tnInput" placeholder="Enter tracking code(s)" />
       <button id="startBtn">Start Tracking</button>
     </div>
-
-    <div class="status" id="statusText" style="display:none;">Status: <span id="stat"></span></div>
-    <div class="progress" style="display:none;"><i id="prog"></i></div>
-    <div class="timeline" id="timeline"></div>
-    <div class="delivered" id="deliveredText" style="display:none;">✅ Delivered!</div>
-
-    <footer>Frequently Asked Questions.</footer>
   </div>
-</div>
-</div>
- <!-- End of tracker card -->
 
-<!-- Paste FAQ code here -->
-<div class="card" style="margin-top:24px;">
-  <span class="faq-toggle" id="faqToggle">Show/Hide FAQ</span>
-  <div class="faq" id="faqContent" style="display:none;">
-    <div class="faq-item">
-      <p><strong>Q: What’s a tracking number and where can I find it?</strong></p>
-      <p><em>A:</em> A tracking number or ID is a combination of numbers and possibly letters that uniquely identifies your shipment for national or international tracking. Usually, the shipper or online shop provides it. If you ordered a product online, the confirmation email or shipment notification often contains it. If not, contact your shipper or online shop.</p>
-    </div>
-    <div class="faq-item">
-      <p><strong>Q: Why is my tracking ID/Number not working?</strong></p>
-      <p><em>A:</em> Make sure you entered the correct tracking number in the correct format: minimum 5 characters, no extra spaces. If it still doesn’t work, contact your shipper or online shop.</p>
-    </div>
-    <div class="faq-item">
-      <p><strong>Q: If I don’t have my tracking information, can I still track my shipment?</strong></p>
-      <p><em>A:</em> Without a tracking number, contact your shipper. Some reference numbers may work with the specific courier system (for example: DHL Express or DHL Freight).</p>
+  <!-- FAQ section -->
+  <div class="card" style="margin-top:24px;">
+    <span class="faq-toggle" id="faqToggle">Show/Hide FAQ</span>
+    <div class="faq" id="faqContent">
+      <div class="faq-item">
+        <p><strong>Q: What’s a tracking number and where can I find it?</strong></p>
+        <p><em>A:</em> A tracking number or ID is a combination of numbers and possibly letters that uniquely identifies your shipment. Usually, the shipper or online shop provides it. If you ordered a product online, the confirmation email or shipment notification often contains it. If not, contact your shipper or online shop.</p>
+      </div>
+      <div class="faq-item">
+        <p><strong>Q: Why is my tracking ID/Number not working?</strong></p>
+        <p><em>A:</em> Make sure you entered the correct tracking number in the correct format: minimum 5 characters, no extra spaces. If it still doesn’t work, contact your shipper or online shop.</p>
+      </div>
+      <div class="faq-item">
+        <p><strong>Q: If I don’t have my tracking information, can I still track my shipment?</strong></p>
+        <p><em>A:</em> Without a tracking number, contact your shipper. Some reference numbers may work using shipment tracking systems of the specific courier.</p>
+      </div>
     </div>
   </div>
+
+  <div id="shipmentsContainer"></div>
 </div>
 
 <script>
 (function(){
   const tnInput = document.getElementById('tnInput');
   const startBtn = document.getElementById('startBtn');
-  const statusEl = document.getElementById('stat');
-  const progBar = document.getElementById('prog');
-  const timelineEl = document.getElementById('timeline');
-  const statusContainer = document.getElementById('statusText');
-  const progContainer = document.querySelector('.progress');
-  const deliveredEl = document.getElementById('deliveredText');
-
+  const shipmentsContainer = document.getElementById('shipmentsContainer');
 
   const events = [
     {time:"Day 1 - 09:00", title:"Shipment Created", loc:"Origin Facility"},
@@ -102,67 +92,92 @@ footer{margin-top:14px;color:var(--muted);font-size:13px;text-align:center;}
     {time:"Day 5 - 15:00", title:"Delivered", loc:"Destination Address"}
   ];
 
-  function createTimeline(){
-    timelineEl.innerHTML="";
+  const stepDuration = 24*60*60*1000; // 24 hours per step
+
+  function storageKeyForTN(tn){ return 'tracker_state_' + tn; }
+  function saveState(tn, startTs){ localStorage.setItem(storageKeyForTN(tn), JSON.stringify({ startTs })); }
+  function loadState(tn){ try{ return JSON.parse(localStorage.getItem(storageKeyForTN(tn))); } catch(e){ return null; }
+  }
+  function clearState(tn){ localStorage.removeItem(storageKeyForTN(tn)); }
+
+  function createShipmentCard(tn){
+    const container = document.createElement('div');
+    container.className='card shipment-card';
+    container.innerHTML = `
+      <div class="row"><strong>Tracking Code:</strong> ${tn}</div>
+      <div class="status" style="display:block;">Status: <span class="stat"></span></div>
+      <div class="progress"><i class="prog"></i></div>
+      <div class="timeline"></div>
+      <div class="delivered" style="display:none;">✅ Delivered!</div>
+    `;
+    shipmentsContainer.appendChild(container);
+    return container;
+  }
+
+  function animateShipment(container, tn){
+    const statEl = container.querySelector('.stat');
+    const progEl = container.querySelector('.prog');
+    const timelineEl = container.querySelector('.timeline');
+    const deliveredEl = container.querySelector('.delivered');
+
+    timelineEl.innerHTML='';
     events.forEach((e)=>{
       const step = document.createElement('div');
       step.className='step';
-      step.innerHTML='<div class="circle"></div><div class="time">'+e.time+'</div><div class="desc">'+e.title+'</div><div class="meta">'+e.loc+'</div>';
+      step.innerHTML=`<div class="circle"></div><div class="time">${e.time}</div><div class="desc">${e.title}</div><div class="meta">${e.loc}</div>`;
       timelineEl.appendChild(step);
     });
-  }
 
-  function animateTimeline(){
-    const steps = Array.from(document.querySelectorAll('.step'));
-    let idx = 0;
-    const totalSteps = steps.length;
-    const totalDuration = 5*24*60*60*1000; // 5 days in ms
-    const Duration = 60*60*1000; // demo: 5 minutes total for testing
-    statusContainer.style.display='block';
-    progContainer.style.display='block';
+    const steps = Array.from(timelineEl.querySelectorAll('.step'));
+    let saved = loadState(tn);
+    let startTs = saved && saved.startTs ? saved.startTs : Date.now();
+    if(!saved) saveState(tn, startTs);
 
-    const interval =Duration / totalSteps;
+    const progressUpdate = ()=>{
+      const now = Date.now();
+      const elapsed = now - startTs;
+      let idx = Math.floor(elapsed / stepDuration);
+      if(idx >= steps.length) idx = steps.length-1;
 
-    function revealNext(){
-      if(idx >= totalSteps){
+      const stepProgress = (elapsed % stepDuration)/stepDuration;
+
+      steps.forEach((s,i)=>{
+        if(i<idx) s.style.opacity=1, s.querySelector('.circle').classList.add('active');
+        if(i===idx) s.style.opacity=1, s.querySelector('.circle').classList.add('active');
+      });
+
+      const overallProgress = ((idx + stepProgress)/steps.length)*100;
+      progEl.style.width = overallProgress + '%';
+
+      if(idx >= steps.length-1 && stepProgress>=1){
+        statEl.textContent = events[steps.length-1].title + ' — ' + events[steps.length-1].time;
         deliveredEl.style.display='block';
-        progBar.style.width='100%';
-        return;
+        clearState(tn);
+      } else {
+        statEl.textContent = events[Math.min(idx,steps.length-1)].title + ' — ' + events[Math.min(idx,steps.length-1)].time;
+        requestAnimationFrame(progressUpdate);
       }
-      const step = steps[idx];
-      step.style.opacity='1';
-      step.querySelector('.circle').classList.add('active');
-      statusEl.textContent = events[idx].title + ' — ' + events[idx].time;
-      const pct = Math.round((idx/(steps.length-1))*100);
-      progBar.style.width = pct+'%';
-      idx++;
-      setTimeout(revealNext, interval);
-    }
-    revealNext();
+    };
+    requestAnimationFrame(progressUpdate);
   }
 
-  startBtn.addEventListener('click',()=>{
-    const tn = tnInput.value.trim();
-    if(!tn){ alert("Please enter a tracking code"); return; }
-    createTimeline();
-    tnInput.disabled=true;
-    startBtn.disabled=true;
-    animateTimeline();
-    
+  startBtn.addEventListener('click', ()=>{
+    const input = tnInput.value.trim();
+    if(!input){ alert("Please enter at least one tracking code"); return; }
+    const codes = input.split(',').map(s=>s.trim()).filter(Boolean);
+    tnInput.disabled=true; startBtn.disabled=true;
+
+    codes.forEach(code=>{
+      const card = createShipmentCard(code);
+      animateShipment(card, code);
+    });
   });
-  
-  // FAQ toggle code
+
   const faqToggle = document.getElementById('faqToggle');
-const faqContent = document.getElementById('faqContent');
-
-faqToggle.addEventListener('click', () => {
-    if(faqContent.style.display === 'none'){
-        faqContent.style.display = 'flex'; // shows FAQ
-    } else {
-        faqContent.style.display = 'none'; // hides FAQ
-    }
-});
-
+  const faqContent = document.getElementById('faqContent');
+  faqToggle.addEventListener('click', ()=>{
+    faqContent.style.display = faqContent.style.display==='none'?'flex':'none';
+  });
 
 })();
 </script>
